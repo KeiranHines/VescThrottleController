@@ -3,8 +3,6 @@
 #include <ezButton.h>
 #include <limits.h>
 
-#define NO_START_TIME 0
-
 // CONFIG PARAMS
 #define HAS_BRAKE // Comment out to disable braking.
 // #define DEBUG // Uncomment to enable debug logging over serial.
