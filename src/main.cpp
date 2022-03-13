@@ -14,7 +14,7 @@
 #define PPM_PIN 3    // PPM Output pin.
 #define BUTTON_PIN 2 // Throttle button pin.
 
-#define SHORT_PRESS 500         // ms
+#define SHORT_PRESS 500          // ms
 #define LONG_PRESS 1000          // ms
 #define OVERDRIVE_OFF_DELAY 5000 // ms
 
@@ -50,7 +50,7 @@ enum Mode
 Mode nextMode(Mode m);
 void updateOutput();
 bool handleBrake();
-bool handleOverdriveExpiry();
+void handleOverdriveExpiry();
 void handleStandardOperation();
 void startOverdriveTimer();
 
@@ -79,7 +79,7 @@ void setup()
   brakeSensor.setDebounceTime(50);
 #endif
   button.setDebounceTime(50);
-  button.setCountMode(COUNT_FALLING);
+  button.setCountMode(COUNT_RISING);
   ppm.attach(PPM_PIN, PPM_MIN, PPM_MAX);
   ppm.writeMicroseconds(map(0, MIN_INPUT, 100, PPM_MIN, PPM_MAX));
 }
@@ -93,8 +93,10 @@ void loop()
     return;
   }
 
-  if (overdriveExpiryActive && handleOverdriveExpiry())
+  if (overdriveExpiryActive)
   {
+
+    handleOverdriveExpiry();
     return;
   }
   handleStandardOperation();
@@ -142,9 +144,8 @@ bool handleBrake()
 /**
  * Handles if the override expiry is running. Disables the overdrive if either the timers has expired
  * or the user has pressed the button three times, indicating they want a medium throttle.
- * @returns true if overdrive is still active, false otherwise.
  */
-bool handleOverdriveExpiry()
+void handleOverdriveExpiry()
 {
   if (millis() > overdriveExpiredTimestamp || button.getCount() >= OVERDRIVE_EXPIRY_TO_MED)
   {
@@ -152,6 +153,9 @@ bool handleOverdriveExpiry()
     int count = button.getCount();
     switch (count)
     {
+    case 0:
+      currentMode = lastMode;
+      break;
     case OVERDRIVE_EXPIRY_TO_LOW:
       currentMode = low;
       break;
@@ -161,15 +165,16 @@ bool handleOverdriveExpiry()
     default:
       currentMode = off;
     }
+    lastMode = button.isReleased() ? currentMode : null; // Standard operation will clean current to null on the same release
+    overdriveExpiredTimestamp = ULONG_MAX;
     overdriveExpiryActive = false;
 #ifdef DEBUG
     Serial.print("Overdrive expiry finished. Count: ");
     Serial.print(count);
     Serial.print(" ");
 #endif
-    return false;
+    button.resetCount();
   }
-  return true;
 }
 
 /**
@@ -195,9 +200,12 @@ void handleStandardOperation()
     {
       startOverdriveTimer();
     }
-
-    // reset for next press.
-    lastMode = null;
+    else
+    {
+      // reset for next press.
+      lastMode = null;
+    }
+    
     shortPressTimestamp = ULONG_MAX;
     longPressTimestamp = ULONG_MAX;
   }
