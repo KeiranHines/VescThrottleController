@@ -5,7 +5,8 @@
 
 // CONFIG PARAMS
 #define HAS_BRAKE // Comment out to disable braking.
-// #define DEBUG // Uncomment to enable debug logging over serial.
+#define DEBUG     // Uncomment to enable debug logging over serial.
+#define DEBUG_BAUD 115200
 
 #ifdef HAS_BRAKE
 #define BRAKE_PIN 12 // Brake sensor pin.
@@ -13,8 +14,12 @@
 #define PPM_PIN 3    // PPM Output pin.
 #define BUTTON_PIN 2 // Throttle button pin.
 
-#define SHORT_PRESS 1000 // ms
-#define LONG_PRESS 3000  // ms
+#define SHORT_PRESS 500         // ms
+#define LONG_PRESS 1000          // ms
+#define OVERDRIVE_OFF_DELAY 5000 // ms
+
+#define OVERDRIVE_EXPIRY_TO_LOW 2 // Number of presses after overdrive to go to low
+#define OVERDRIVE_EXPIRY_TO_MED 3 // Number of presses after overdrive to go to med, medium should always be higher
 
 #define PPM_MIN 1000 // us
 #define PPM_MAX 2000 // us
@@ -29,8 +34,8 @@ enum Mode
 #endif
   null = -1,
   off = 0,
-  low = 50,
-  med = 75,
+  low = 30,
+  med = 60,
   overdrive = 100
 };
 
@@ -44,6 +49,10 @@ enum Mode
 
 Mode nextMode(Mode m);
 void updateOutput();
+bool handleBrake();
+bool handleOverdriveExpiry();
+void handleStandardOperation();
+void startOverdriveTimer();
 
 Mode lastMode = null;    // Last mode seen in this cylce, used to reset overdrive back to last position.
 Mode currentMode = off;  // Current mode.
@@ -57,15 +66,21 @@ ezButton brakeSensor(BRAKE_PIN);
 
 unsigned long shortPressTimestamp = ULONG_MAX;
 unsigned long longPressTimestamp = ULONG_MAX;
+unsigned long overdriveExpiredTimestamp = ULONG_MAX;
+bool overdriveExpiryActive = false;
 
 void setup()
 {
   pinMode(PPM_PIN, OUTPUT);
 #ifdef DEBUG
-  Serial.begin(115200);
+  Serial.begin(DEBUG_BAUD);
+#endif
+#ifdef HAS_BRAKE
+  brakeSensor.setDebounceTime(50);
 #endif
   button.setDebounceTime(50);
-  ppm.attach(PPM_PIN, 1000, 2000);
+  button.setCountMode(COUNT_FALLING);
+  ppm.attach(PPM_PIN, PPM_MIN, PPM_MAX);
   ppm.writeMicroseconds(map(0, MIN_INPUT, 100, PPM_MIN, PPM_MAX));
 }
 
@@ -73,22 +88,42 @@ void loop()
 {
   button.loop(); // Needed to update button state.
 
+  if (handleBrake())
+  {
+    return;
+  }
+
+  if (overdriveExpiryActive && handleOverdriveExpiry())
+  {
+    return;
+  }
+  handleStandardOperation();
+  updateOutput();
+}
+
+/**
+ * Handles the brake trigger. Brake is expected to be pressed in when NOT active
+ * Releasing the brake sensor activates the braking mode.
+ * @returns true if the brake is still active, false otherwise.
+ */
+bool handleBrake()
+{
 #ifdef HAS_BRAKE
   brakeSensor.loop();
-  if (brakeSensor.isPressed())
+  if (brakeSensor.isReleased())
   {
     shortPressTimestamp = ULONG_MAX;
     longPressTimestamp = ULONG_MAX;
     if (currentMode == overdrive)
     {
       // Safety: If brake is triggered while in overdrive disable overdrive on restart
-      currentMode = lastMode;
+      startOverdriveTimer();
     }
     lastMode = currentMode;
     currentMode = brake;
     updateOutput();
   }
-  if (brakeSensor.isReleased())
+  if (brakeSensor.isPressed())
   {
     currentMode = lastMode;
     lastMode = null;
@@ -97,10 +132,51 @@ void loop()
   if (currentMode == brake)
   {
     // If braking don't check throttle contol
-    return;
+    updateOutput();
+    return true;
   }
 #endif
+  return false;
+}
 
+/**
+ * Handles if the override expiry is running. Disables the overdrive if either the timers has expired
+ * or the user has pressed the button three times, indicating they want a medium throttle.
+ * @returns true if overdrive is still active, false otherwise.
+ */
+bool handleOverdriveExpiry()
+{
+  if (millis() > overdriveExpiredTimestamp || button.getCount() >= OVERDRIVE_EXPIRY_TO_MED)
+  {
+    overdriveExpiredTimestamp = ULONG_MAX;
+    int count = button.getCount();
+    switch (count)
+    {
+    case OVERDRIVE_EXPIRY_TO_LOW:
+      currentMode = low;
+      break;
+    case OVERDRIVE_EXPIRY_TO_MED:
+      currentMode = med;
+      break;
+    default:
+      currentMode = off;
+    }
+    overdriveExpiryActive = false;
+#ifdef DEBUG
+    Serial.print("Overdrive expiry finished. Count: ");
+    Serial.print(count);
+    Serial.print(" ");
+#endif
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Handles the standard operation being able to select a throttle mode or overdrive active/deactive
+ */
+void handleStandardOperation()
+{
   if (button.isPressed())
   {
     // Start held timer.
@@ -117,8 +193,7 @@ void loop()
     }
     if (currentMode == overdrive)
     {
-      // was overdriven and released, reset to last state.
-      currentMode = lastMode;
+      startOverdriveTimer();
     }
 
     // reset for next press.
@@ -126,7 +201,6 @@ void loop()
     shortPressTimestamp = ULONG_MAX;
     longPressTimestamp = ULONG_MAX;
   }
-
   if (lastMode == null && millis() > shortPressTimestamp)
   {
     // Short press active first time, cache lastMode and set current mode.
@@ -143,7 +217,6 @@ void loop()
     // Long press activate overdrive until release.
     currentMode = overdrive;
   }
-  updateOutput();
 }
 
 /**
@@ -164,6 +237,14 @@ void updateOutput()
     Serial.println("us");
 #endif
   }
+}
+
+void startOverdriveTimer()
+{
+  // was overdriven and released, Start overdrive delay
+  overdriveExpiredTimestamp = millis() + OVERDRIVE_OFF_DELAY;
+  overdriveExpiryActive = true;
+  button.resetCount();
 }
 
 /**
