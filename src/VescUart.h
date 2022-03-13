@@ -1,0 +1,26 @@
+#ifndef __VESC_UART_H__
+#define __VESC_UART_H__
+
+#include <Arduino.h>
+
+#ifndef PACKET_MAX_PL_LEN
+#define PACKET_MAX_PL_LEN 512
+#endif
+#define BUFFER_LEN (PACKET_MAX_PL_LEN + 8)
+
+/**
+ * Wrapper class for VescUart wrapping Hardware serial
+ * to enable Vesc specific command methods.
+ */
+class VescUart : public HardwareSerial
+{
+public:
+    VescUart(int uart_nr);
+    void writeCurrentRel(float current);
+    void alive();
+
+private:
+    int PackSendPayload(unsigned char *data, unsigned int len);
+};
+
+#endif // __VESC_UART_H__
