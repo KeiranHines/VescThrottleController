@@ -26,6 +26,7 @@
 
 /**
  * Modes for throttle steps.
+ * Edit the numbers to affect the percentage output of each mode.
  */
 enum Mode
 {
@@ -54,7 +55,7 @@ void handleOverdriveExpiry();
 void handleStandardOperation();
 void startOverdriveTimer();
 
-Mode lastMode = null;    // Last mode seen in this cylce, used to reset overdrive back to last position.
+Mode lastMode = null;    // Last mode seen in this cycle, used to reset overdrive back to last position.
 Mode currentMode = off;  // Current mode.
 Mode lastWritten = null; // Last written mode to prevent expensive writes.
 
