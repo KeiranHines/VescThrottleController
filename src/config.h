@@ -7,7 +7,7 @@
 #define VESC_BAUD_RATE 115200 // BAUD rate of vesc
 #define VESC_SERIAL_NUM 2
 
-#define DEBUG // Uncomment to enable debug logging over serial.
+// #define DEBUG // Uncomment to enable debug logging over serial.
 #ifdef DEBUG
 #define DEBUG_BAUD 115200
 #define DEBUG_SERIAL_NUM 0
@@ -17,7 +17,7 @@
 
 #ifdef THROTTLE_CONTROLLER
 /* General throttle controls */
-#define HAS_BRAKE // Comment out to disable braking.
+// #define HAS_BRAKE // Comment out to disable braking.
 /* Throttle Type */
 #define BUTTON_THROTTLE
 
