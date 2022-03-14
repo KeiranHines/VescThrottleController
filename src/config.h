@@ -1,9 +1,18 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
+#define NO_GLOBAL_SERIAL
+
 #define VESC_NAME "ESP_VESC"
 #define VESC_BAUD_RATE 115200 // BAUD rate of vesc
-// #define DEBUG // Uncomment to enable debug logging over serial.
+#define VESC_SERIAL_NUM 2
+
+#define DEBUG // Uncomment to enable debug logging over serial.
+#ifdef DEBUG
+#define DEBUG_BAUD 115200
+#define DEBUG_SERIAL_NUM 0
+#endif // DEBUG
+
 #define THROTTLE_CONTROLLER // If a throttle controller is present
 
 #ifdef THROTTLE_CONTROLLER

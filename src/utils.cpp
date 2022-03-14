@@ -1,22 +1,21 @@
 #include "utils.h"
-#include <Arduino.h>
 
 void printSerial(const char *header, unsigned char *data, int len)
 {
-    Serial.print(header);
+    debugSerial->print(header);
     for (int i = 0; i <= len; i++)
     {
-        Serial.print(data[i]);
-        Serial.print(" ");
+        debugSerial->print(data[i]);
+        debugSerial->print(" ");
     }
-    Serial.println("");
+    debugSerial->println("");
 }
 void printSerial(const char *header, std::string data, std::size_t len)
 {
     for (int i = 0; i < data.length(); i++)
     {
-        Serial.print(data[i], DEC);
-        Serial.print(" ");
+        debugSerial->print(data[i], DEC);
+        debugSerial->print(" ");
     }
 }
 

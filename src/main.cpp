@@ -1,8 +1,13 @@
 #include "VescUart.h"
 #include "config.h"
 #include "BleServer.h"
+#include "utils.h"
 
-VescUart vesc(2);
+VescUart vesc(VESC_SERIAL_NUM);
+
+#ifdef DEBUG
+HardwareSerial *debugSerial = new HardwareSerial(DEBUG_SERIAL_NUM);
+#endif // DEBUG
 
 BleServer *bleServer = new BleServer();
 
@@ -15,14 +20,15 @@ IThrottleController *throttle = new ButtonController();
 
 void setup()
 {
-  vesc.begin(VESC_BAUD_RATE, SERIAL_8N1, VESC_RX_PIN, VESC_TX_PIN, false);
+  vesc.begin(VESC_BAUD_RATE, SERIAL_8N1);
   delay(50);
-  Serial.begin(115200);
+#ifdef DEBUG
+  debugSerial->begin(DEBUG_BAUD);
+#endif
   bleServer->init(&vesc);
-  #ifdef THROTTLE_CONTROLLER
+#ifdef THROTTLE_CONTROLLER
   throttle->init(&vesc);
-  #endif // THROTTLE_CONTROLLER
-
+#endif // THROTTLE_CONTROLLER
 }
 
 void loop()
