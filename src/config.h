@@ -1,5 +1,5 @@
-#ifndef __CONFIG_H__
-#define __CONFIG_H__
+#ifndef CONFIG_H
+#define CONFIG_H
 
 #define NO_GLOBAL_SERIAL
 
@@ -17,7 +17,7 @@
 
 #ifdef THROTTLE_CONTROLLER
 /* General throttle controls */
-// #define HAS_BRAKE // Comment out to disable braking.
+#define HAS_BRAKE // Comment out to disable braking.
 /* Throttle Type */
 #define BUTTON_THROTTLE
 
@@ -39,4 +39,4 @@
 #endif // BUTTON_THROTTLE
 #endif // THROTTLE_CONTROLLER
 
-#endif //__CONFIG_H__
+#endif //CONFIG_H

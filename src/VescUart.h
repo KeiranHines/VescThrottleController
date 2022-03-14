@@ -1,7 +1,8 @@
-#ifndef __VESC_UART_H__
-#define __VESC_UART_H__
+#ifndef VESC_UART_H
+#define VESC_UART_H
 
 #include <Arduino.h>
+#include "freertos/semphr.h"
 
 #ifndef PACKET_MAX_PL_LEN
 #define PACKET_MAX_PL_LEN 512
@@ -21,6 +22,7 @@ public:
 
 private:
     int PackSendPayload(unsigned char *data, unsigned int len);
+    xSemaphoreHandle mutex;
 };
 
-#endif // __VESC_UART_H__
+#endif // VESC_UART_H

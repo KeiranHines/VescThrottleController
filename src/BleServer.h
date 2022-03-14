@@ -1,7 +1,7 @@
-#ifndef __BLE_SERVER_H__
-#define __BLE_SERVER_H__
+#ifndef BLE_SERVER_H
+#define BLE_SERVER_H
 
-#include <Arduino.h>
+#include <Stream.h>
 #include <NimBLEDevice.h>
 #include "config.h"
 
@@ -16,8 +16,7 @@ class BleServer : public NimBLEServerCallbacks,
                   public BLECharacteristicCallbacks
 {
 public:
-  BleServer();
-  void init(Stream *vesc);
+  BleServer(Stream *vesc);
   void loop();
 
   // NimBLEServerCallbacks
@@ -31,9 +30,13 @@ public:
 
 private:
   Stream *vescUart;
-  #ifdef DEBUG
-  HardwareSerial * debugSerial;
-  #endif // DEBUG
+  NimBLEServer *pServer = NULL;
+  NimBLEService *pServiceVesc = NULL;
+  NimBLECharacteristic *pCharacteristicVescTx = NULL;
+  NimBLECharacteristic *pCharacteristicVescRx = NULL;
+  bool deviceConnected = false;
+  bool oldDeviceConnected = false;
+  std::string bufferString;
 };
 
-#endif
+#endif // BLE_SERVER_H
