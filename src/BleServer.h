@@ -31,6 +31,9 @@ public:
 
 private:
   Stream *vescUart;
+  #ifdef DEBUG
+  HardwareSerial * debugSerial;
+  #endif // DEBUG
 };
 
 #endif

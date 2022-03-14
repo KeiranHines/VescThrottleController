@@ -38,7 +38,7 @@ inline void BleServer::onConnect(NimBLEServer *pServer, ble_gap_conn_desc *desc)
 inline void BleServer::onDisconnect(NimBLEServer *pServer)
 {
 #ifdef DEBUG
-    Serial.println(clientDisconnected);
+    debugSerial->println("Client disconnected - start advertising");
 #endif
     deviceConnected = false;
     NimBLEDevice::startAdvertising();
@@ -47,7 +47,6 @@ inline void BleServer::onDisconnect(NimBLEServer *pServer)
 void BleServer::init(Stream *vesc)
 {
     vescUart = vesc;
-
     NimBLEDevice::init(VESC_NAME);
     pServer = NimBLEDevice::createServer();
     pServer->setCallbacks(this);

@@ -145,6 +145,11 @@ void ButtonController::updateOutput()
     if (lastWritten != currentMode)
     {
         lastWritten = currentMode;
+#ifdef DEBUG
+        debugSerial->print("Setting throttle to: ");
+        debugSerial->print(currentMode);
+        debugSerial->println("%");
+#endif
         // Todo: Support more operating modes than just current_rel. E.g. Duty Cycle.
         vescUart->writeCurrentRel(getOutputRel());
     }
