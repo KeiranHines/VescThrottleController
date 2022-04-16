@@ -125,6 +125,10 @@ void ButtonController::updateOutput()
         // Todo: Support more operating modes than just current_rel. E.g. Duty Cycle.
         vesc->writeCurrentRel(getOutputRel());
     }
+    if(lastWritten > 0)
+    {
+        vesc->alive();
+    }
 }
 
 /**

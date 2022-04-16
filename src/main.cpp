@@ -37,7 +37,6 @@ void setup()
 void loop()
 {
   bleServer->loop();
-  vesc->alive();
 #ifdef THROTTLE_CONTROLLER
   throttle->loop();
 #endif // THROTTLE_CONTROLLER
