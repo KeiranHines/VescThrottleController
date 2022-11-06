@@ -1,13 +1,12 @@
-#ifndef __ITHROTTLE_CONTROLLER_H__
-#define __ITHROTTLE_CONTROLLER_H__
+#ifndef ITHROTTLE_CONTROLLER_H
+#define ITHROTTLE_CONTROLLER_H
 
 #include "VescUart.h"
 
 class IThrottleController
 {
 public:
-    virtual void init(VescUart *vesc) = 0;
     virtual void loop() = 0;
 };
 
-#endif // __ITHROTTLE_CONTROLLER_H__
+#endif // ITHROTTLE_CONTROLLER_H

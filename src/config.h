@@ -1,5 +1,5 @@
-#ifndef __CONFIG_H__
-#define __CONFIG_H__
+#ifndef CONFIG_H
+#define CONFIG_H
 
 #define NO_GLOBAL_SERIAL
 
@@ -7,7 +7,7 @@
 #define VESC_BAUD_RATE 115200 // BAUD rate of vesc
 #define VESC_SERIAL_NUM 2
 
-#define DEBUG // Uncomment to enable debug logging over serial.
+// #define DEBUG // Uncomment to enable debug logging over serial.
 #ifdef DEBUG
 #define DEBUG_BAUD 115200
 #define DEBUG_SERIAL_NUM 0
@@ -39,4 +39,4 @@
 #endif // BUTTON_THROTTLE
 #endif // THROTTLE_CONTROLLER
 
-#endif //__CONFIG_H__
+#endif //CONFIG_H

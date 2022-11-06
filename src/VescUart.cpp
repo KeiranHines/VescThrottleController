@@ -2,29 +2,29 @@
 #include "buffer.h"
 #include "datatypes.h"
 #include "crc.h"
-#include "freertos/semphr.h"
+#include "config.h"
+#include "utils.h"
 
-xSemaphoreHandle mutex = xSemaphoreCreateRecursiveMutex();
-
-VescUart::VescUart(int uart_nr) : HardwareSerial(uart_nr) {}
+VescUart::VescUart(int uart_nr) : HardwareSerial(uart_nr) {
+    mutex = xSemaphoreCreateRecursiveMutex();
+}
 
 void VescUart::alive()
 {
-    int32_t index = 0;
     uint8_t payload[1];
-
-    payload[index++] = COMM_ALIVE;
+    payload[0] = COMM_ALIVE;
     PackSendPayload(payload, 1);
 }
 
 void VescUart::writeCurrentRel(float current)
 {
     int32_t index = 0;
-    uint8_t payload[5];
+    constexpr int PAYLOAD_SIZE =5;
+    uint8_t payload[PAYLOAD_SIZE];
 
     payload[index++] = COMM_SET_CURRENT_REL;
     buffer_append_float32(payload, current, 1e5, &index); // TODO Confirm scaling. and if value should be passed as 0-1 or 0-100
-    PackSendPayload(payload, 5);
+    PackSendPayload(payload, PAYLOAD_SIZE);
 }
 
 int VescUart::PackSendPayload(unsigned char *data, unsigned int len)
@@ -37,12 +37,12 @@ int VescUart::PackSendPayload(unsigned char *data, unsigned int len)
     int b_ind = 0;
     xSemaphoreTakeRecursive(mutex, portMAX_DELAY);
     unsigned char tx_buffer[BUFFER_LEN];
-    if (len <= 255)
+    if (len <= UINT8_MAX)
     {
         tx_buffer[b_ind++] = 2;
         tx_buffer[b_ind++] = len;
     }
-    else if (len <= 65535)
+    else if (len <= UINT16_MAX)
     {
         tx_buffer[b_ind++] = 3;
         tx_buffer[b_ind++] = len >> 8;
